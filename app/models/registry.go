@@ -12,9 +12,11 @@ func RegisterModels() []Model {
 		{Model: ProductImage{}},
 		{Model: Section{}},
 		{Model: Category{}},
-		{Model: Order{}},
-		{Model: OrderItem{}},
-		{Model: Payment{}},
-		{Model: Shipment{}},
+		//{Model: Order{}},
+		//{Model: OrderItem{}},
+		//{Model: Payment{}},
+		//{Model: Shipment{}},
+		{Model: Cart{}},
+		{Model: CartItem{}},
 	}
 }
