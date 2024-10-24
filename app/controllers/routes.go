@@ -13,6 +13,9 @@ func (server *Server) InitializeRoutes() {
 
 	server.Router.HandleFunc("/carts", server.GetCart).Methods("GET")
 	server.Router.HandleFunc("/carts", server.AddItemToCart).Methods("POST")
+	server.Router.HandleFunc("/carts/update", server.UpdateCart).Methods("POST")
+	server.Router.HandleFunc("/carts/cities", server.GetCitiesByProvince).Methods("GET")
+	server.Router.HandleFunc("/carts/remove/{id}", server.RemoveItemByID).Methods("GET")
 
 	staticFileDirectory := http.Dir("./assets/")
 	staticFileHandler := http.StripPrefix("/public/", http.FileServer(staticFileDirectory))
