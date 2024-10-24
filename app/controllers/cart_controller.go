@@ -3,8 +3,12 @@ package controllers
 import (
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"github.com/novaru/go-shop/app/models"
+	"github.com/unrolled/render"
 	"gorm.io/gorm"
+	"log"
+	"math"
 	"net/http"
 	"strconv"
 )
@@ -47,18 +51,50 @@ func GetShoppingCart(db *gorm.DB, cartID string) (*models.Cart, error) {
 	if err != nil {
 		existCart, _ = cart.CreateCart(db, cartID)
 	}
+
 	_, _ = existCart.CalculateCart(db, cartID)
-	return existCart, nil
+
+	updatedCart, _ := cart.GetCart(db, cartID)
+
+	totalWeight := 0
+	productModel := models.Product{}
+	for _, cartItem := range updatedCart.CartItems {
+		product, _ := productModel.FindByID(db, cartItem.ProductID)
+
+		productWeight, _ := product.Weight.Float64()
+		ceilWeight := math.Ceil(productWeight)
+
+		itemWeight := cartItem.Qty * int(ceilWeight)
+
+		totalWeight += itemWeight
+	}
+
+	updatedCart.TotalWeight = totalWeight
+
+	return updatedCart, nil
 }
 
 func (server *Server) GetCart(w http.ResponseWriter, r *http.Request) {
+	render := render.New(render.Options{
+		Layout: "layout",
+	})
+
 	var cart *models.Cart
 
 	cartID := GetShoppingCartID(w, r)
 	cart, _ = GetShoppingCart(server.DB, cartID)
+	items, _ := cart.GetItems(server.DB, cartID)
 
-	fmt.Println("cart id ===> ", cart.ID)
-	fmt.Println("cart items ==>", cart.CartItems)
+	provinces, err := server.GetProvinces()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_ = render.HTML(w, http.StatusOK, "cart", map[string]interface{}{
+		"cart":      cart,
+		"items":     items,
+		"provinces": provinces,
+	})
 }
 
 func (server *Server) AddItemToCart(w http.ResponseWriter, r *http.Request) {
@@ -88,4 +124,49 @@ func (server *Server) AddItemToCart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/carts", http.StatusSeeOther)
+}
+
+func (server *Server) UpdateCart(w http.ResponseWriter, r *http.Request) {
+	cartID := GetShoppingCartID(w, r)
+	cart, _ := GetShoppingCart(server.DB, cartID)
+
+	for _, item := range cart.CartItems {
+		qty, _ := strconv.Atoi(r.FormValue(item.ID))
+
+		_, err := cart.UpdateItemQty(server.DB, item.ID, qty)
+		if err != nil {
+			http.Redirect(w, r, "/carts", http.StatusSeeOther)
+		}
+	}
+
+	http.Redirect(w, r, "/carts", http.StatusSeeOther)
+}
+
+func (server *Server) RemoveItemByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	if vars["id"] == "" {
+		http.Redirect(w, r, "/carts", http.StatusSeeOther)
+	}
+
+	cartID := GetShoppingCartID(w, r)
+	cart, _ := GetShoppingCart(server.DB, cartID)
+
+	err := cart.RemoveItemByID(server.DB, vars["id"])
+	if err != nil {
+		http.Redirect(w, r, "/carts", http.StatusSeeOther)
+	}
+
+	http.Redirect(w, r, "/carts", http.StatusSeeOther)
+}
+
+func ClearCart(db *gorm.DB, cartID string) error {
+	var cart models.Cart
+
+	err := cart.ClearCart(db, cartID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
