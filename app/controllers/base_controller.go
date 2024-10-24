@@ -50,6 +50,12 @@ type PaginationParams struct {
 	CurrentPage int32
 }
 
+type Result struct {
+	Code    int         `json:"code"`
+	Data    interface{} `json:"data"`
+	Message string      `json:"message"`
+}
+
 var (
 	store               *sessions.CookieStore
 	sessionShoppingCart = "shopping-cart-session"

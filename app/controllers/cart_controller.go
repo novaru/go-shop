@@ -1,15 +1,18 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/novaru/go-shop/app/models"
+	"github.com/shopspring/decimal"
 	"github.com/unrolled/render"
 	"gorm.io/gorm"
 	"log"
 	"math"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -169,4 +172,118 @@ func ClearCart(db *gorm.DB, cartID string) error {
 	}
 
 	return nil
+}
+
+func (server *Server) GetCitiesByProvince(w http.ResponseWriter, r *http.Request) {
+	provinceID := r.URL.Query().Get("province_id")
+
+	cities, err := server.GetCitiesByProvinceID(provinceID)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	res := Result{Code: 200, Data: cities, Message: "Success"}
+	result, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}
+
+func (server *Server) CalculateShipping(w http.ResponseWriter, r *http.Request) {
+	origin := os.Getenv("API_ONGKIR_ORIGIN")
+	destination := r.FormValue("city_id")
+	courier := r.FormValue("courier")
+
+	if destination == "" {
+		http.Error(w, "invalid destination", http.StatusInternalServerError)
+	}
+
+	cartID := GetShoppingCartID(w, r)
+	cart, _ := GetShoppingCart(server.DB, cartID)
+
+	shippingFeeOptions, err := server.CalculateShippingFee(models.ShippingFeeParams{
+		Origin:      origin,
+		Destination: destination,
+		Weight:      cart.TotalWeight,
+		Courier:     courier,
+	})
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	res := Result{Code: 200, Data: shippingFeeOptions, Message: "Success"}
+	result, _ := json.Marshal(res)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}
+
+func (server *Server) ApplyShipping(w http.ResponseWriter, r *http.Request) {
+	origin := os.Getenv("API_ONGKIR_ORIGIN")
+	destination := r.FormValue("city_id")
+	courier := r.FormValue("courier")
+	shippingPackage := r.FormValue("shipping_package")
+
+	cartID := GetShoppingCartID(w, r)
+	cart, _ := GetShoppingCart(server.DB, cartID)
+
+	if destination == "" {
+		http.Error(w, "invalid destination", http.StatusInternalServerError)
+		return
+	}
+
+	shippingFeeOptions, err := server.CalculateShippingFee(models.ShippingFeeParams{
+		Origin:      origin,
+		Destination: destination,
+		Weight:      cart.TotalWeight,
+		Courier:     courier,
+	})
+
+	if err != nil {
+		http.Error(w, "invalid shipping calculation", http.StatusInternalServerError)
+		return
+	}
+
+	var selectedShipping models.ShippingFeeOption
+
+	for _, shippingOption := range shippingFeeOptions {
+		if shippingOption.Service == shippingPackage {
+			selectedShipping = shippingOption
+			continue
+		}
+	}
+
+	type ApplyShippingResponse struct {
+		TotalOrder  decimal.Decimal `json:"total_order"`
+		ShippingFee decimal.Decimal `json:"shipping_fee"`
+		GrandTotal  decimal.Decimal `json:"grand_total"`
+		TotalWeight decimal.Decimal `json:"total_weight"`
+	}
+
+	var grandTotal float64
+
+	cartGrandTotal, _ := cart.GrandTotal.Float64()
+	shippingFee := float64(selectedShipping.Fee)
+	grandTotal = cartGrandTotal + shippingFee
+
+	applyShippingResponse := ApplyShippingResponse{
+		TotalOrder:  cart.GrandTotal,
+		ShippingFee: decimal.NewFromInt(selectedShipping.Fee),
+		GrandTotal:  decimal.NewFromFloat(grandTotal),
+		TotalWeight: decimal.NewFromInt(int64(cart.TotalWeight)),
+	}
+
+	res := Result{Code: 200, Data: applyShippingResponse, Message: "Success"}
+	result, _ := json.Marshal(res)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
 }
