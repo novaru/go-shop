@@ -1,7 +1,7 @@
 package models
 
 const (
-	TaxPercent = 10
+	TaxPercent = 11
 )
 
 func GetTaxPercent() float64 {
