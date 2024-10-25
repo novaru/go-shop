@@ -79,7 +79,8 @@ func GetShoppingCart(db *gorm.DB, cartID string) (*models.Cart, error) {
 
 func (server *Server) GetCart(w http.ResponseWriter, r *http.Request) {
 	render := render.New(render.Options{
-		Layout: "layout",
+		Layout:     "layout",
+		Extensions: []string{".tmpl", ".html"},
 	})
 
 	var cart *models.Cart
@@ -97,6 +98,8 @@ func (server *Server) GetCart(w http.ResponseWriter, r *http.Request) {
 		"cart":      cart,
 		"items":     items,
 		"provinces": provinces,
+		"success":   GetFlash(w, r, "success"),
+		"error":     GetFlash(w, r, "error"),
 	})
 }
 
@@ -108,10 +111,13 @@ func (server *Server) AddItemToCart(w http.ResponseWriter, r *http.Request) {
 	product, err := productModel.FindByID(server.DB, productID)
 	if err != nil {
 		http.Redirect(w, r, "/products/"+product.Slug, http.StatusSeeOther)
+		return
 	}
 
 	if qty > product.Stock {
+		SetFlash(w, r, "error", "Stok item tidak mencukupi")
 		http.Redirect(w, r, "/products/"+product.Slug, http.StatusSeeOther)
+		return
 	}
 
 	var cart *models.Cart
@@ -126,6 +132,7 @@ func (server *Server) AddItemToCart(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/products/"+product.Slug, http.StatusSeeOther)
 	}
 
+	SetFlash(w, r, "success", "Item berhasil ditambahkan")
 	http.Redirect(w, r, "/carts", http.StatusSeeOther)
 }
 
@@ -262,21 +269,20 @@ func (server *Server) ApplyShipping(w http.ResponseWriter, r *http.Request) {
 
 	type ApplyShippingResponse struct {
 		TotalOrder  decimal.Decimal `json:"total_order"`
-		ShippingFee decimal.Decimal `json:"shipping_fee"`
+		ShippingFee int64           `json:"shipping_fee"`
 		GrandTotal  decimal.Decimal `json:"grand_total"`
 		TotalWeight decimal.Decimal `json:"total_weight"`
 	}
 
-	var grandTotal float64
+	shippingFee := selectedShipping.Fee
 
-	cartGrandTotal, _ := cart.GrandTotal.Float64()
-	shippingFee := float64(selectedShipping.Fee)
-	grandTotal = cartGrandTotal + shippingFee
+	cartGrandTotal := cart.GrandTotal
+	grandTotal := cartGrandTotal.Add(decimal.NewFromInt(int64(shippingFee)))
 
 	applyShippingResponse := ApplyShippingResponse{
 		TotalOrder:  cart.GrandTotal,
-		ShippingFee: decimal.NewFromInt(selectedShipping.Fee),
-		GrandTotal:  decimal.NewFromFloat(grandTotal),
+		ShippingFee: shippingFee,
+		GrandTotal:  grandTotal,
 		TotalWeight: decimal.NewFromInt(int64(cart.TotalWeight)),
 	}
 
