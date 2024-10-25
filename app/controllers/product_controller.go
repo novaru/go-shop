@@ -10,7 +10,8 @@ import (
 
 func (server *Server) Products(w http.ResponseWriter, r *http.Request) {
 	render := render.New(render.Options{
-		Layout: "layout",
+		Layout:     "layout",
+		Extensions: []string{".tmpl", ".html"},
 	})
 
 	q := r.URL.Query()
@@ -38,6 +39,7 @@ func (server *Server) Products(w http.ResponseWriter, r *http.Request) {
 		"pagination": pagination,
 	})
 }
+
 func (server *Server) GetProductBySlug(w http.ResponseWriter, r *http.Request) {
 	render := render.New(render.Options{
 		Layout:     "layout",
@@ -58,8 +60,8 @@ func (server *Server) GetProductBySlug(w http.ResponseWriter, r *http.Request) {
 
 	_ = render.HTML(w, http.StatusOK, "product", map[string]interface{}{
 		"product": product,
-		//"success": flash.GetFlash(w, r, "success"),
-		//"error":   flash.GetFlash(w, r, "error"),
+		"success": GetFlash(w, r, "success"),
+		"error":   GetFlash(w, r, "error"),
 		//"user":    auth.CurrentUser(server.DB, w, r),
 	})
 }
