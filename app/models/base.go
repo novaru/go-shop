@@ -8,6 +8,6 @@ func GetTaxPercent() float64 {
 	return float64(TaxPercent) / 100.0
 }
 
-func GetTaxAmount(price float64) float64 {
-	return GetTaxPercent() * price
+func GetTaxAmount(price int) float64 {
+	return GetTaxPercent() * float64(price)
 }

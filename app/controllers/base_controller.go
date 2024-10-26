@@ -270,7 +270,7 @@ func (server *Server) CalculateShippingFee(shippingParams models.ShippingFeePara
 		for _, cost := range result.Costs {
 			shippingFeeOptions = append(shippingFeeOptions, models.ShippingFeeOption{
 				Service: cost.Service,
-				Fee:     cost.Cost[0].Value,
+				Fee:     int(cost.Cost[0].Value),
 			})
 		}
 	}

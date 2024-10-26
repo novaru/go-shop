@@ -28,7 +28,7 @@ func ProductFaker(db *gorm.DB) *models.Product {
 		Sku:              slug.Make(name),
 		Name:             name,
 		Slug:             slug.Make(name),
-		Price:            decimal.NewFromFloat(fakePrice()),
+		Price:            fakePrice(),
 		Stock:            rand.Intn(100),
 		Weight:           decimal.NewFromFloat(rand.Float64()),
 		ShortDescription: faker.Paragraph(),
@@ -40,12 +40,6 @@ func ProductFaker(db *gorm.DB) *models.Product {
 	}
 }
 
-func fakePrice() float64 {
-	return precision(rand.Float64()*math.Pow10(rand.Intn(8)), rand.Intn(2)+1)
-}
-
-// precision | a helper function to set precision of price
-func precision(val float64, pre int) float64 {
-	div := math.Pow10(pre)
-	return float64(int64(val*div)) / div
+func fakePrice() int {
+	return (rand.Intn(1000) + 1) * int(math.Pow10(rand.Intn(4)+2))
 }

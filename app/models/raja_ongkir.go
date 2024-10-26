@@ -75,5 +75,5 @@ type CostDetail struct {
 
 type ShippingFeeOption struct {
 	Service string `json:"service"`
-	Fee     int64  `json:"fee"`
+	Fee     int    `json:"fee"`
 }

@@ -268,16 +268,16 @@ func (server *Server) ApplyShipping(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type ApplyShippingResponse struct {
-		TotalOrder  decimal.Decimal `json:"total_order"`
-		ShippingFee int64           `json:"shipping_fee"`
-		GrandTotal  decimal.Decimal `json:"grand_total"`
+		TotalOrder  int             `json:"total_order"`
+		ShippingFee int             `json:"shipping_fee"`
+		GrandTotal  int             `json:"grand_total"`
 		TotalWeight decimal.Decimal `json:"total_weight"`
 	}
 
 	shippingFee := selectedShipping.Fee
 
 	cartGrandTotal := cart.GrandTotal
-	grandTotal := cartGrandTotal.Add(decimal.NewFromInt(int64(shippingFee)))
+	grandTotal := cartGrandTotal + shippingFee
 
 	applyShippingResponse := ApplyShippingResponse{
 		TotalOrder:  cart.GrandTotal,
