@@ -27,6 +27,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/midtrans/midtrans-go v1.3.8 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/unrolled/render v1.6.1 // indirect
 	github.com/urfave/cli v1.22.15 // indirect
