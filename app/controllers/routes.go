@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/novaru/go-shop/app/middlewares"
 	"net/http"
 )
 
@@ -18,8 +19,8 @@ func (server *Server) InitializeRoutes() {
 	server.Router.HandleFunc("/products", server.Products).Methods("GET")
 	server.Router.HandleFunc("/products/{slug}", server.GetProductBySlug).Methods("GET")
 
-	server.Router.HandleFunc("/upload", server.UploadProduct).Methods("GET")
-	server.Router.HandleFunc("/upload", server.DoUploadProduct).Methods("POST")
+	//server.Router.HandleFunc("/upload", server.UploadProduct).Methods("GET")
+	//server.Router.HandleFunc("/upload", server.DoUploadProduct).Methods("POST")
 
 	server.Router.HandleFunc("/carts", server.GetCart).Methods("GET")
 	server.Router.HandleFunc("/carts", server.AddItemToCart).Methods("POST")
@@ -29,8 +30,8 @@ func (server *Server) InitializeRoutes() {
 	server.Router.HandleFunc("/carts/apply-shipping", server.ApplyShipping).Methods("POST")
 	server.Router.HandleFunc("/carts/remove/{id}", server.RemoveItemByID).Methods("GET")
 
-	server.Router.HandleFunc("/orders/checkout", server.Checkout).Methods("POST")
-	server.Router.HandleFunc("/orders/{id}", server.ShowOrder).Methods("GET")
+	server.Router.HandleFunc("/orders/checkout", middlewares.AuthMiddleware(server.Checkout)).Methods("POST")
+	server.Router.HandleFunc("/orders/{id}", middlewares.AuthMiddleware(server.ShowOrder)).Methods("GET")
 
 	server.Router.HandleFunc("/payments/midtrans", server.Midtrans).Methods("POST")
 
