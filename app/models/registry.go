@@ -14,6 +14,7 @@ func RegisterModels() []Model {
 		{Model: Category{}},
 		{Model: Order{}},
 		{Model: OrderItem{}},
+		{Model: OrderCustomer{}},
 		{Model: Payment{}},
 		{Model: Shipment{}},
 		{Model: Cart{}},
