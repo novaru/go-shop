@@ -10,7 +10,6 @@ import (
 	"github.com/novaru/go-shop/app/models"
 	"github.com/novaru/go-shop/database/seeders"
 	"github.com/urfave/cli"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -58,19 +57,18 @@ type Result struct {
 }
 
 var (
-	store               *sessions.CookieStore
+	store               = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
 	sessionShoppingCart = "shopping-cart-session"
-	sessionFlash        = "flash-session"
-	sessionUser         = "user-session"
 )
 
 func (server *Server) Initialize(c config.Env) {
 	fmt.Printf("Welcome to the App %s\n", c.AppName)
 
+	fmt.Printf("Session: %s\n", os.Getenv("SESSION_KEY"))
+
 	server.Config = &c
 	server.InitializeDB(c)
 	server.InitializeRoutes()
-	server.InitializeStore([]byte(os.Getenv("SESSION_KEY")))
 }
 
 func (server *Server) InitializeDB(c config.Env) {
@@ -146,15 +144,6 @@ func (server *Server) Run(addr string) {
 	log.Fatal(http.ListenAndServe(addr, server.Router))
 }
 
-func (server *Server) InitializeStore(secret []byte) {
-	store = sessions.NewCookieStore(secret)
-	store.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   86400 * 7, // 7 days
-		HttpOnly: true,
-	}
-}
-
 func GetPaginationLinks(c *config.Env, params PaginationParams) (PaginationLinks, error) {
 	var links []PageLink
 
@@ -193,7 +182,7 @@ func GetPaginationLinks(c *config.Env, params PaginationParams) (PaginationLinks
 }
 
 func (server *Server) GetProvinces() ([]models.Province, error) {
-	response, err := http.Get(os.Getenv("API_ONGKIR_BASE_URL") + "/province?key=" + os.Getenv("API_ONGKIR_KEY"))
+	response, err := http.Get(os.Getenv("API_ONGKIR_BASE_URL") + "province?key=" + os.Getenv("API_ONGKIR_KEY"))
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
@@ -276,72 +265,4 @@ func (server *Server) CalculateShippingFee(shippingParams models.ShippingFeePara
 	}
 
 	return shippingFeeOptions, nil
-}
-
-func SetFlash(w http.ResponseWriter, r *http.Request, name string, value string) {
-	session, err := store.Get(r, sessionFlash)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	session.AddFlash(value, name)
-	session.Save(r, w)
-}
-
-func GetFlash(w http.ResponseWriter, r *http.Request, name string) []string {
-	session, err := store.Get(r, sessionFlash)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return nil
-	}
-
-	fm := session.Flashes(name)
-	if len(fm) == 0 {
-		return nil
-	}
-
-	session.Save(r, w)
-	var flashes []string
-	for _, fl := range fm {
-		flashes = append(flashes, fl.(string))
-	}
-
-	return flashes
-}
-
-func IsLoggedIn(r *http.Request) bool {
-	session, _ := store.Get(r, sessionUser)
-	if session.Values["id"] == nil {
-		return false
-	}
-
-	return true
-}
-
-func ComparePassword(password string, hash string) bool {
-	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
-}
-
-func MakePassword(password string) (string, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-
-	return string(hashedPassword), err
-}
-
-func (server *Server) CurrentUser(w http.ResponseWriter, r *http.Request) *models.User {
-	if !IsLoggedIn(r) {
-		return nil
-	}
-
-	session, _ := store.Get(r, sessionUser)
-	userModel := models.User{}
-	user, err := userModel.FindByID(server.DB, session.Values["id"].(string))
-	if err != nil {
-		session.Values["id"] = nil
-		session.Save(r, w)
-		return nil
-	}
-
-	return user
 }

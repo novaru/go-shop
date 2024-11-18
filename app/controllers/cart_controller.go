@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/novaru/go-shop/app/core/session/auth"
+	"github.com/novaru/go-shop/app/core/session/flash"
 	"github.com/novaru/go-shop/app/models"
 	"github.com/shopspring/decimal"
 	"github.com/unrolled/render"
@@ -17,34 +19,13 @@ import (
 )
 
 func GetShoppingCartID(w http.ResponseWriter, r *http.Request) string {
-	session, err := store.Get(r, sessionShoppingCart)
-	fmt.Println(session)
-
-	if err != nil {
-		fmt.Println("Error getting session")
-		session, _ = store.New(r, sessionShoppingCart)
+	session, _ := store.Get(r, sessionShoppingCart)
+	if session.Values["cart-id"] == nil {
+		session.Values["cart-id"] = uuid.New().String()
+		_ = session.Save(r, w)
 	}
 
-	if session.Values["id"] == nil {
-		session.Values["id"] = uuid.New().String()
-		err = session.Save(r, w)
-		if err != nil {
-			fmt.Println("Error getting session")
-		}
-	}
-
-	cartID, ok := session.Values["id"].(string)
-	if !ok {
-		// If for some reason the ID is not a string, generate a new one
-		cartID = uuid.New().String()
-		session.Values["id"] = cartID
-		err = session.Save(r, w)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-
-	return cartID
+	return fmt.Sprintf("%v", session.Values["cart-id"])
 }
 
 func GetShoppingCart(db *gorm.DB, cartID string) (*models.Cart, error) {
@@ -98,8 +79,9 @@ func (server *Server) GetCart(w http.ResponseWriter, r *http.Request) {
 		"cart":      cart,
 		"items":     items,
 		"provinces": provinces,
-		"success":   GetFlash(w, r, "success"),
-		"error":     GetFlash(w, r, "error"),
+		"success":   flash.GetFlash(w, r, "success"),
+		"error":     flash.GetFlash(w, r, "error"),
+		"user":      auth.CurrentUser(server.DB, w, r),
 	})
 }
 
@@ -115,7 +97,7 @@ func (server *Server) AddItemToCart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if qty > product.Stock {
-		SetFlash(w, r, "error", "Stok item tidak mencukupi")
+		flash.SetFlash(w, r, "error", "Stok item tidak mencukupi")
 		http.Redirect(w, r, "/products/"+product.Slug, http.StatusSeeOther)
 		return
 	}
@@ -132,7 +114,7 @@ func (server *Server) AddItemToCart(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/products/"+product.Slug, http.StatusSeeOther)
 	}
 
-	SetFlash(w, r, "success", "Item berhasil ditambahkan")
+	flash.SetFlash(w, r, "success", "Item berhasil ditambahkan")
 	http.Redirect(w, r, "/carts", http.StatusSeeOther)
 }
 

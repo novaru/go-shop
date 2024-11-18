@@ -1,9 +1,13 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/google/uuid"
+	"github.com/novaru/go-shop/app/core/session/auth"
+	"github.com/novaru/go-shop/app/core/session/flash"
 	"github.com/novaru/go-shop/app/models"
 	"github.com/unrolled/render"
+	"log"
 	"net/http"
 )
 
@@ -14,7 +18,7 @@ func (server *Server) Login(w http.ResponseWriter, r *http.Request) {
 	})
 
 	_ = render.HTML(w, http.StatusOK, "login", map[string]interface{}{
-		"error": GetFlash(w, r, "error"),
+		"error": flash.GetFlash(w, r, "error"),
 	})
 }
 
@@ -25,20 +29,31 @@ func (server *Server) DoLogin(w http.ResponseWriter, r *http.Request) {
 	userModel := models.User{}
 	user, err := userModel.FindByEmail(server.DB, email)
 	if err != nil {
-		SetFlash(w, r, "error", "Email atau password invalid")
+		flash.SetFlash(w, r, "error", "Email atau password invalid")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
-	if !ComparePassword(password, user.Password) {
-		SetFlash(w, r, "error", "Email atau password invalid")
+	if !auth.ComparePassword(password, user.Password) {
+		flash.SetFlash(w, r, "error", "Email atau password invalid")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
-	session, _ := store.Get(r, sessionUser)
+	session, err := auth.GetSessionUser(r)
+	if err != nil {
+		fmt.Println("Error getting session")
+		session, _ = store.New(r, auth.SessionUser)
+	}
+
 	session.Values["id"] = user.ID
-	session.Save(r, w)
+	err = session.Save(r, w)
+	if err != nil {
+		flash.SetFlash(w, r, "error", "Email atau password invalid")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		log.Fatal(err)
+		return
+	}
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
@@ -50,7 +65,7 @@ func (server *Server) Register(w http.ResponseWriter, r *http.Request) {
 	})
 
 	_ = render.HTML(w, http.StatusOK, "register", map[string]interface{}{
-		"error": GetFlash(w, r, "error"),
+		"error": flash.GetFlash(w, r, "error"),
 	})
 }
 
@@ -61,7 +76,7 @@ func (server *Server) DoRegister(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	if firstName == "" || lastName == "" || email == "" || password == "" {
-		SetFlash(w, r, "error", "First name, last name, email atau password diperlukan!")
+		flash.SetFlash(w, r, "error", "First name, last name, email atau password diperlukan!")
 		http.Redirect(w, r, "/register", http.StatusSeeOther)
 		return
 	}
@@ -69,12 +84,12 @@ func (server *Server) DoRegister(w http.ResponseWriter, r *http.Request) {
 	userModel := models.User{}
 	existUser, _ := userModel.FindByEmail(server.DB, email)
 	if existUser != nil {
-		SetFlash(w, r, "error", "Maaf, email sudah terdaftar")
+		flash.SetFlash(w, r, "error", "Maaf, email sudah terdaftar")
 		http.Redirect(w, r, "/register", http.StatusSeeOther)
 		return
 	}
 
-	hashedPassword, _ := MakePassword(password)
+	hashedPassword, _ := auth.MakePassword(password)
 	params := &models.User{
 		ID:        uuid.New().String(),
 		FirstName: firstName,
@@ -85,13 +100,13 @@ func (server *Server) DoRegister(w http.ResponseWriter, r *http.Request) {
 
 	user, err := userModel.CreateUser(server.DB, params)
 	if err != nil {
-		SetFlash(w, r, "error", "Maaf, registrasi gagal")
+		flash.SetFlash(w, r, "error", "Maaf, registrasi gagal")
 		http.Redirect(w, r, "/register", http.StatusSeeOther)
 		return
 	}
 
 	// langsung login (assign user_id ke session)
-	session, _ := store.Get(r, sessionUser)
+	session, _ := auth.GetSessionUser(r)
 	session.Values["id"] = user.ID
 	session.Save(r, w)
 
@@ -99,7 +114,7 @@ func (server *Server) DoRegister(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) Logout(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, sessionUser)
+	session, _ := auth.GetSessionUser(r)
 	session.Values["id"] = nil
 	session.Save(r, w)
 

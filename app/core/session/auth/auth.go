@@ -10,14 +10,14 @@ import (
 )
 
 var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
-var sessionUser = "user-session"
+var SessionUser = "user-session"
 
 func GetSessionUser(r *http.Request) (*sessions.Session, error) {
-	return store.Get(r, sessionUser)
+	return store.Get(r, SessionUser)
 }
 
 func IsLoggedIn(r *http.Request) bool {
-	session, _ := store.Get(r, sessionUser)
+	session, _ := store.Get(r, SessionUser)
 	return session.Values["id"] != nil
 }
 
@@ -36,7 +36,7 @@ func CurrentUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) *models.Us
 		return nil
 	}
 
-	session, _ := store.Get(r, sessionUser)
+	session, _ := store.Get(r, SessionUser)
 
 	userModel := models.User{}
 	user, err := userModel.FindByID(db, session.Values["id"].(string))

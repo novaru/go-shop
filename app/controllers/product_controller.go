@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/novaru/go-shop/app/core/session/auth"
+	"github.com/novaru/go-shop/app/core/session/flash"
 	"github.com/novaru/go-shop/app/models"
 	"github.com/unrolled/render"
 	"net/http"
@@ -60,8 +62,8 @@ func (server *Server) GetProductBySlug(w http.ResponseWriter, r *http.Request) {
 
 	_ = render.HTML(w, http.StatusOK, "product", map[string]interface{}{
 		"product": product,
-		"success": GetFlash(w, r, "success"),
-		"error":   GetFlash(w, r, "error"),
-		//"user":    auth.CurrentUser(server.DB, w, r),
+		"success": flash.GetFlash(w, r, "success"),
+		"error":   flash.GetFlash(w, r, "error"),
+		"user":    auth.CurrentUser(server.DB, w, r),
 	})
 }

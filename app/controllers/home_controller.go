@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/novaru/go-shop/app/core/session/auth"
 	"github.com/unrolled/render"
 	"net/http"
 )
@@ -11,7 +12,7 @@ func (server *Server) Home(w http.ResponseWriter, r *http.Request) {
 		Extensions: []string{".tmpl", ".html"},
 	})
 
-	user := server.CurrentUser(w, r)
+	user := auth.CurrentUser(server.DB, w, r)
 
 	_ = render.HTML(w, http.StatusOK, "home", map[string]interface{}{
 		"user": user,
