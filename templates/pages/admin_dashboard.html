@@ -1,0 +1,144 @@
+{{ define "admin_dashboard" }}
+<section class="dashboard-section">
+    <div class="container-fluid mx-auto">
+        <h3>Dashboard</h3>
+        <p>Hello Admin</p>
+        <p>{{ .user }}</p>
+        <div class="row">
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-stats bg-gradient-primary text-white">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col">
+                                <h5 class="card-title text-uppercase text-muted mb-0 text-white">Total Users</h5>
+                                <span class="h2 font-weight-bold mb-0">2,356</span>
+                            </div>
+                            <div class="col-auto">
+                                <div class="icon icon-shape bg-white text-primary rounded-circle shadow">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-3 mb-0 text-sm">
+                            <span class="text-success mr-2"><i class="fa fa-arrow-up"></i> 3.48%</span>
+                            <span class="text-nowrap">Since last month</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-stats bg-gradient-info text-white">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col">
+                                <h5 class="card-title text-uppercase text-muted mb-0 text-white">Total Products</h5>
+                                <span class="h2 font-weight-bold mb-0">124</span>
+                            </div>
+                            <div class="col-auto">
+                                <div class="icon icon-shape bg-white text-info rounded-circle shadow">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-3 mb-0 text-sm">
+                            <span class="text-success mr-2"><i class="fa fa-arrow-up"></i> 12.5%</span>
+                            <span class="text-nowrap">Since last quarter</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-stats bg-gradient-success text-white">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col">
+                                <h5 class="card-title text-uppercase text-muted mb-0 text-white">Total Payments</h5>
+                                <span class="h2 font-weight-bold mb-0">$45,678</span>
+                            </div>
+                            <div class="col-auto">
+                                <div class="icon icon-shape bg-white text-success rounded-circle shadow">
+                                    <i class="fas fa-credit-card"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-3 mb-0 text-sm">
+                            <span class="text-success mr-2"><i class="fa fa-arrow-up"></i> 8.75%</span>
+                            <span class="text-nowrap">Since last month</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-stats bg-gradient-danger text-white">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col">
+                                <h5 class="card-title text-uppercase text-muted mb-0 text-white">Pending Orders</h5>
+                                <span class="h2 font-weight-bold mb-0">12</span>
+                            </div>
+                            <div class="col-auto">
+                                <div class="icon icon-shape bg-white text-danger rounded-circle shadow">
+                                    <i class="fas fa-chart-bar"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-3 mb-0 text-sm">
+                            <span class="text-warning mr-2"><i class="fa fa-arrow-down"></i> 2.3%</span>
+                            <span class="text-nowrap">Since last week</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Table -->
+        <div class="card mt-4">
+            <div class="card-header border-0">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h3 class="mb-0">Recent Activity</h3>
+                    </div>
+                    <div class="col text-right">
+                        <a href="#" class="btn btn-sm btn-primary">See all</a>
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-items-center table-flush">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">User</th>
+                        <th scope="col">Action</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>John Doe</td>
+                        <td>Purchased Product X</td>
+                        <td>2 hours ago</td>
+                        <td>
+                                <span class="badge badge-dot mr-4">
+                                    <i class="bg-success"></i> Completed
+                                </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Jane Smith</td>
+                        <td>Created New Account</td>
+                        <td>Yesterday</td>
+                        <td>
+                                <span class="badge badge-dot mr-4">
+                                    <i class="bg-warning"></i> Pending
+                                </span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{ end }}
