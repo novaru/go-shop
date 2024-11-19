@@ -9,6 +9,8 @@ import (
 
 type User struct {
 	ID            string `gorm:"size:36;not null;uniqueIndex;primary_key"`
+	RoleID        string `gorm:"size:36;index"`
+	Role          Role
 	Addresses     []Address
 	FirstName     string `gorm:"size:100;not null"`
 	LastName      string `gorm:"size:100;not null"`
@@ -40,6 +42,7 @@ func (u *User) FindByID(db *gorm.DB, userID string) (*User, error) {
 	var user User
 
 	err = db.Debug().
+		Preload("Role").
 		Model(User{}).
 		Where("id = ?", userID).
 		First(&user).Error

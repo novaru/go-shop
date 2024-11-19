@@ -679,3 +679,15 @@ Products Page
     background: #e9ecef;
     border-color: #5e72e4;
 }
+
+/* Dashhboard Admin */
+.card-stats {
+    transition: transform 0.3s ease;
+    margin-bottom: 1.5rem;
+}
+.card-stats:hover {
+    transform: scale(1.05);
+}
+.dashboard-section {
+    padding: 2rem 1rem;
+}

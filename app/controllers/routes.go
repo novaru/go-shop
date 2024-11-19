@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/novaru/go-shop/app/consts"
 	"github.com/novaru/go-shop/app/middlewares"
 	"net/http"
 )
@@ -15,6 +16,15 @@ func (server *Server) InitializeRoutes() {
 	server.Router.HandleFunc("/register", server.Register).Methods("GET")
 	server.Router.HandleFunc("/register", server.DoRegister).Methods("POST")
 	server.Router.HandleFunc("/logout", server.Logout).Methods("GET")
+
+	server.Router.HandleFunc("/admin/dashboard",
+		middlewares.AuthMiddleware(
+			middlewares.RoleMiddleware(
+				server.AdminDashboard,
+				server.DB,
+				consts.RoleAdmin,
+				consts.RoleOperator))).
+		Methods("GET")
 
 	server.Router.HandleFunc("/products", server.Products).Methods("GET")
 	server.Router.HandleFunc("/products/{slug}", server.GetProductBySlug).Methods("GET")
